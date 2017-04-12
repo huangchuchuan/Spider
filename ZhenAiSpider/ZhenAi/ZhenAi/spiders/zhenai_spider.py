@@ -4,6 +4,7 @@ import scrapy
 import json
 import traceback
 import mymongo
+from ZhenAi.items import ZhenaiItem
 
 
 class ZhenaiSpider(scrapy.Spider):
@@ -55,4 +56,5 @@ class ZhenaiSpider(scrapy.Spider):
 
     def parse_detail(self, response):
         # TODO
+        items =
         pass
