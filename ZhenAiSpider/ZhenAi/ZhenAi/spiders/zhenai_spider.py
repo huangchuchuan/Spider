@@ -70,4 +70,54 @@ class ZhenaiSpider(scrapy.Spider):
             key, value = get_brief_td_to_key_value(td)
             brief_dict[key] = value
 
-        pass
+        nick_name = html_selector.xpath('//a[@class="name fs24"]/text()').extract_first()
+
+        id_str = html_selector.xpath('//p[@class="brief-info fs14 lh32 c9f"]/text()').extract_first()
+        id = re.findall('ID.*?(\d+)', id_str)[0]
+
+        info = html_selector.xpath(
+            '//div[@class="mod-tab-info"]/p[@class="fs14 lh20 c5e slider-area-js"]/text()').extract()
+        person_os = re.findall('(.*?)<span', info[0].strip())[0]
+        description = re.findall('(.*?)<span', info[1].strip())[0]
+
+        data_table_td = html_selector.xpath('//div[@class="info-floor floor-data posr clearfix"]//table//td').extract()
+        data_dict = {}
+        for td in data_table_td:
+            key, value = get_info_td_to_key_value(td)
+            data_dict[key] = value
+
+        life_table_td = html_selector.xpath('//div[@class="info-floor floor-life posr clearfix"]//table//td').extract()
+        life_dict = {}
+        for td in life_table_td:
+            key, value = get_info_td_to_key_value(td)
+            life_dict[key] = value
+
+        hobby_table_td = html_selector.xpath('//div[@class="info-floor floor-hobby posr clearfix"]//table//td').extract()
+        hobby_dict = {}
+        for td in hobby_table_td:
+            key, value = get_info_td_to_key_value(td)
+            hobby_dict[key] = value
+
+        term_table_td = html_selector.xpath('//div[@class="info-floor floor-term posr clearfix"]//table//td').extract()
+        term_dict = {}
+        for td in term_table_td:
+            key, value = get_info_td_to_key_value(td)
+            term_dict[key] = value
+
+        all_data = {
+            'nick_name': nick_name,
+            'url': url,
+            'member_id': id,
+            'person_os': person_os,
+            'description': description,
+            'data': data_dict,
+            'life': life_dict,
+            'hobby': hobby_dict,
+            'term': term_dict,
+            'pic_url': items['url']
+        }
+        mongo = mymongo.MyMongo()
+        mongo.insert_doc('ZhenAi', 'CompleteData', all_data)
+
+        return items
+
