@@ -19,7 +19,7 @@ NEWSPIDER_MODULE = 'ZhenAi.spiders'
 #USER_AGENT = 'ZhenAi (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -39,10 +39,18 @@ ROBOTSTXT_OBEY = True
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-#}
+DEFAULT_REQUEST_HEADERS = {
+   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
+   'Accept': 'application/json, text/javascript, */*; q=0.01',
+   'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+   'Accept-Encoding': 'gzip, deflate',
+   'X-Requested-With': 'XMLHttpRequest',
+   'Referer': 'http://search.zhenai.com/v2/search/pinterest.do?'
+              'sex=1&agebegin=18&ageend=-1&workcityprovince=-1&workcitycity=-1'
+              '&info=&h1=-1&h2=-1&salaryBegin=-1&salaryEnd=-1&occupation=-1&h=-1'
+              '&c=-1&workcityprovince1=-1&workcitycity1=-1&constellation=-1&animals=-1'
+              '&stock=-1&belief=-1&lvBegin=-1&lvEnd=-1&condition=66&orderby=hpf&hotIndex=&online=',
+}
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
@@ -64,9 +72,11 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'ZhenAi.pipelines.ZhenaiPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'ZhenAi.pipelines.ZhenAiImagePipline': 300,
+}
+IMAGES_STORE = 'pic'
+IMAGES_EXPIRES = 90
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
