@@ -13,10 +13,16 @@ class OopSpider(CrawlSpider):
     allowed_domains = ['date.jobbole.com']
     start_urls = ['http://date.jobbole.com']
     rules = [
-        Rule(SgmlLinkExtractor(allow=('/page/\d{,3}/')), follow=True, callback='parse_item')
+        Rule(SgmlLinkExtractor(allow=('/page/\d{1,3}/')), follow=True, callback='parse_item')
     ]
+    index_flag = True
 
     def parse_item(self, response):
+        # add front page search
+        if OopSpider.index_flag:
+            OopSpider.index_flag = False
+            yield scrapy.Request(OopSpider.start_urls[0], callback=self.parse_item)
+
         html_selector = scrapy.Selector(response)
         urls = html_selector.xpath('//li[@class="media"]/div/h3/a/@href').extract()
         for url in urls:
