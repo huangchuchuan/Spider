@@ -62,23 +62,24 @@ class ZhenaiSpider(scrapy.Spider):
         html_selector = scrapy.Selector(response)
         url = get_base_url(response)
         items['url'] = html_selector.xpath(
-            '//div[@id="AblumsThumbsListID"]/ul/li/p/img[1]/@data-big-img/text()').extract()
+            '//div[@id="AblumsThumbsListID"]/ul/li/p/img[1]/@data-big-img').extract()
 
-        brief_table_td = html_selector.xpath('//table[@class="brief-table"]/td').extract()  # ['<span>x:</span> y']
+        brief_table_td = html_selector.xpath(
+            '//table[@class="brief-table"]//td').extract()  # ['<td><span>x:</span> y</td>']
         brief_dict = {}
         for td in brief_table_td:
             key, value = get_brief_td_to_key_value(td)
-            brief_dict[key] = value
+            if key is not None and value is not None:
+                brief_dict[key] = value
 
         nick_name = html_selector.xpath('//a[@class="name fs24"]/text()').extract_first()
 
         id_str = html_selector.xpath('//p[@class="brief-info fs14 lh32 c9f"]/text()').extract_first()
         id = re.findall('ID.*?(\d+)', id_str)[0]
 
-        info = html_selector.xpath(
-            '//div[@class="mod-tab-info"]/p[@class="fs14 lh20 c5e slider-area-js"]/text()').extract()
-        person_os = re.findall('(.*?)<span', info[0].strip())[0]
-        description = re.findall('(.*?)<span', info[1].strip())[0]
+        person_os = html_selector.xpath(
+            '//div[@class="mod-tab-info"]//div[@class="info-item slider info-inner"]'
+            '//p[@class="fs14 lh20 c5e slider-area-js"]/text()').extract()
 
         data_table_td = html_selector.xpath('//div[@class="info-floor floor-data posr clearfix"]//table//td').extract()
         data_dict = {}
@@ -90,26 +91,29 @@ class ZhenaiSpider(scrapy.Spider):
         life_dict = {}
         for td in life_table_td:
             key, value = get_info_td_to_key_value(td)
-            life_dict[key] = value
+            if key is not None and value is not None:
+                life_dict[key] = value
 
-        hobby_table_td = html_selector.xpath('//div[@class="info-floor floor-hobby posr clearfix"]//table//td').extract()
+        hobby_table_td = html_selector.xpath(
+            '//div[@class="info-floor floor-hobby posr clearfix"]//table//td').extract()
         hobby_dict = {}
         for td in hobby_table_td:
             key, value = get_info_td_to_key_value(td)
-            hobby_dict[key] = value
+            if key is not None and value is not None:
+                hobby_dict[key] = value
 
         term_table_td = html_selector.xpath('//div[@class="info-floor floor-term posr clearfix"]//table//td').extract()
         term_dict = {}
         for td in term_table_td:
             key, value = get_info_td_to_key_value(td)
-            term_dict[key] = value
+            if key is not None and value is not None:
+                term_dict[key] = value
 
         all_data = {
             'nick_name': nick_name,
             'url': url,
             'member_id': id,
             'person_os': person_os,
-            'description': description,
             'data': data_dict,
             'life': life_dict,
             'hobby': hobby_dict,
@@ -120,4 +124,3 @@ class ZhenaiSpider(scrapy.Spider):
         mongo.insert_doc('ZhenAi', 'CompleteData', all_data)
 
         return items
-
