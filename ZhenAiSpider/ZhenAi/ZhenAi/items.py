@@ -11,4 +11,5 @@ import scrapy
 class ZhenaiItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+    pic_url = scrapy.Field()  # used for pipeline to download
     pass

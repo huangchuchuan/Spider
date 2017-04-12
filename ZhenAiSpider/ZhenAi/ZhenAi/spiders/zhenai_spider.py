@@ -4,7 +4,9 @@ import scrapy
 import json
 import traceback
 import mymongo
+from utils import *
 from ZhenAi.items import ZhenaiItem
+from scrapy.utils.response import get_base_url
 
 
 class ZhenaiSpider(scrapy.Spider):
@@ -56,5 +58,16 @@ class ZhenaiSpider(scrapy.Spider):
 
     def parse_detail(self, response):
         # TODO
-        items =
+        items = ZhenaiItem()
+        html_selector = scrapy.Selector(response)
+        url = get_base_url(response)
+        items['url'] = html_selector.xpath(
+            '//div[@id="AblumsThumbsListID"]/ul/li/p/img[1]/@data-big-img/text()').extract()
+
+        brief_table_td = html_selector.xpath('//table[@class="brief-table"]/td').extract()  # ['<span>x:</span> y']
+        brief_dict = {}
+        for td in brief_table_td:
+            key, value = get_brief_td_to_key_value(td)
+            brief_dict[key] = value
+
         pass
