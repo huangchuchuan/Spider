@@ -13,13 +13,13 @@ class ZhenaiSpider(scrapy.Spider):
     name = 'zhenai_spider'
     # generate all base urls
     base_url = 'http://search.zhenai.com/v2/search/getPinterestData.do?' \
-                 'sex=%d&agebegin=18&ageend=-1&workcityprovince=-1&workcitycity=-1' \
-                 '&info=&h1=-1&h2=-1&salaryBegin=-1&salaryEnd=-1&occupation=-1&h=-1' \
-                 '&c=-1&workcityprovince1=-1&workcitycity1=-1&constellation=-1&animals=-1' \
-                 '&stock=-1&belief=-1&lvBegin=-1&lvEnd=-1&condition=66&orderby=hpf&hotIndex=&online=' \
-                 '&currentpage=%d&topSearch=false'
+               'sex=%d&agebegin=18&ageend=-1&workcityprovince=-1&workcitycity=-1' \
+               '&info=&h1=-1&h2=-1&salaryBegin=-1&salaryEnd=-1&occupation=-1&h=-1' \
+               '&c=-1&workcityprovince1=-1&workcitycity1=-1&constellation=-1&animals=-1' \
+               '&stock=-1&belief=-1&lvBegin=-1&lvEnd=-1&condition=66&orderby=hpf&hotIndex=&online=' \
+               '&currentpage=%d&topSearch=false'
     max_pages = 150
-    start_urls = [base_url % (i, j) for i in range(0, 2) for j in range(1, max_pages+1)]
+    start_urls = [base_url % (i, j) for i in range(0, 2) for j in range(1, max_pages + 1)]
 
     def parse(self, response):
         data = {}
@@ -43,6 +43,15 @@ class ZhenaiSpider(scrapy.Spider):
         url = get_base_url(response)
         items['pic_url'] = html_selector.xpath(
             '//div[@id="AblumsThumbsListID"]/ul/li/p/img[1]/@data-big-img').extract()
+
+        honesty_charm = html_selector.xpath('//p[@class="brief-info fs14 lh32 c9f"]/span/span/text()').extract()
+        honesty = '--'
+        charm = '--'
+        if len(honesty_charm) == 2:
+            honesty = honesty_charm[0]
+            charm = honesty_charm[1]
+        zhima_info = html_selector.xpath('//p[@class="brief-name lh32 blue"]/a[6]/text()').extract_first().replace(
+            u'\u5206', '')
 
         brief_table_td = html_selector.xpath(
             '//table[@class="brief-table"]//td').extract()  # ['<td><span>x:</span> y</td>']
@@ -95,6 +104,9 @@ class ZhenaiSpider(scrapy.Spider):
             'url': url,
             'member_id': id,
             'person_os': person_os,
+            'honesty': honesty,
+            'zhima': zhima_info,
+            'charm': charm,
             'data': data_dict,
             'life': life_dict,
             'hobby': hobby_dict,
