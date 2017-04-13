@@ -52,6 +52,8 @@ class ZhenaiSpider(scrapy.Spider):
             charm = honesty_charm[1]
         zhima_info = html_selector.xpath('//p[@class="brief-name lh32 blue"]/a[6]/text()').extract_first().replace(
             u'\u5206', '')
+        if not zhima_info.isdigit():
+            zhima_info = '--'
 
         brief_table_td = html_selector.xpath(
             '//table[@class="brief-table"]//td').extract()  # ['<td><span>x:</span> y</td>']
