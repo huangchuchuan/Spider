@@ -109,6 +109,7 @@ class ZhenaiSpider(scrapy.Spider):
             'honesty': honesty,
             'zhima': zhima_info,
             'charm': charm,
+            'brief_data': brief_dict,
             'data': data_dict,
             'life': life_dict,
             'hobby': hobby_dict,
