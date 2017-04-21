@@ -111,7 +111,9 @@ class ZhenaiSpider(scrapy.Spider):
             '//p[@class="brief-name lh32 blue"]//a[@class="flag-credit credit-js"]/text()').extract_first()
         if zhima_info:
             zhima_info = zhima_info.replace(u'\u5206', '')
-        if not zhima_info.isdigit():
+            if not zhima_info.isdigit():
+                zhima_info = '--'
+        else:
             zhima_info = '--'
 
         brief_table_td = html_selector.xpath(
