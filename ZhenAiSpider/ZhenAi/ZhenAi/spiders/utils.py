@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from itertools import product
 
 
 def get_brief_td_to_key_value(td):
@@ -19,3 +20,8 @@ def get_info_td_to_key_value(td):
         return result[0].replace(u'\uff1a', ''), result[1]
     else:
         return None, None
+
+
+def url_generator(url, *args):
+    for items in product(*args):
+        yield url.format(*items)
