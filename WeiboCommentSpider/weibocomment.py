@@ -302,8 +302,10 @@ if __name__ == '__main__':
     weibo = Weibo('your_weibo_username', 'your_weibo_password')
     servertime, nonce, pubkey, rsakv = weibo.get_login_params()
     weibo.set_login_params(servertime, nonce, pubkey, rsakv)
-    weibo.login()
-    weibo.set_search_keyword('冯提莫')
-    ids = weibo.get_weibo_item_ids()
-    weibo.set_weibo_ids(ids)
-    weibo.curl_comments()
+    if weibo.login():
+        weibo.set_search_keyword('冯提莫')
+        ids = weibo.get_weibo_item_ids()
+        weibo.set_weibo_ids(ids)
+        weibo.curl_comments()
+    else:
+        print 'Make sure that your Weibo username and password are right'
