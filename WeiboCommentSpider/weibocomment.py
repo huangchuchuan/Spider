@@ -10,6 +10,7 @@ import time
 import json
 import datetime
 import codecs
+import re
 from collections import defaultdict
 
 MAX_INT = 999999
@@ -227,6 +228,11 @@ class Weibo():
     def set_weibo_ids(self, ids):
         self.weibo_ids = ids
 
+    def html_filter(self, html_text):
+        pattern = re.compile(r'<[^>]+>', re.S)
+        no_html_text = pattern.sub('', html_text)
+        return no_html_text
+
     def parse_comment_data(self, json_data):
         comments = []
         if 'data' in json_data and json_data['data']:
@@ -235,6 +241,7 @@ class Weibo():
                 user_id = unicode(comment['user']['id'])
                 user_name = unicode(comment['user']['screen_name'])
                 comment_content = unicode(comment['text'])
+                comment_content = self.html_filter(comment_content)
                 comments.append((comment_id, user_id, user_name, comment_content))
         return comments
 
