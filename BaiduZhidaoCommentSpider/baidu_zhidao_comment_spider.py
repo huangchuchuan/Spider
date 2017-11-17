@@ -7,6 +7,10 @@ from lxml import etree
 import re
 import datetime
 import codecs
+import time
+import random
+
+SLEEP = [0.5, 1, 1.5, 2, 2.5, 3]
 
 
 class BaiduZhidao():
@@ -51,6 +55,7 @@ class BaiduZhidao():
 
     def search(self, page=0):
         print '-*- start search with page %d -*-' % (page / 10 + 1)
+        time.sleep(SLEEP[random.randint(0, len(SLEEP) - 1)])
         resp = self.session.get(url=self.search_url.replace('PAGE', str(page)), headers=self.my_headers)
         if resp.status_code == 200:
             response = etree.HTML(resp.text)
@@ -84,6 +89,7 @@ class BaiduZhidao():
 
     def comment(self, url, page=0):
         print ' * start get comments with page %d *' % (page / 5 + 1)
+        time.sleep(SLEEP[random.randint(0, len(SLEEP)-1)])
         resp = self.session.get(url.replace('PAGE', str(page)), headers=self.my_headers)
         if resp.status_code != 200:
             print 'Error status code %d in getting comment result with page %d' % (resp.status_code, (page / 5 + 1))
