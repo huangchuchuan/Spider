@@ -89,8 +89,8 @@ class BaiduZhidao():
 
     def comment(self, url, page=0):
         print ' * start get comments with page %d *' % (page / 5 + 1)
-        time.sleep(SLEEP[random.randint(0, len(SLEEP)-1)])
-        resp = self.session.get(url.replace('PAGE', str(page)), headers=self.my_headers)
+        time.sleep(SLEEP[random.randint(0, len(SLEEP) - 1)])
+        resp = self.session.get(url.replace('PAGE', str(page)), headers=self.my_headers, allow_redirects=False)
         if resp.status_code != 200:
             print 'Error status code %d in getting comment result with page %d' % (resp.status_code, (page / 5 + 1))
             print resp.content
@@ -102,11 +102,19 @@ class BaiduZhidao():
                 print node.xpath('string(.)')
                 comments.append(node.xpath('string(.)').strip())
             print ' | get %d comments | ' % len(comments)
+
+            # 获取问题
+            ask_title = response.xpath('//title/text()')
+            if ask_title:
+                ask_title = ask_title[0]
+            else:
+                ask_title = ""
+
             if comments:
                 comments = map(self.html_filter, comments)
                 with codecs.open(self.filename, 'a', encoding='utf-8') as f:
                     for data in comments:
-                        f.write(data + '\n')
+                        f.write(ask_title + '|' + data + '\n')
 
             next_page = response.xpath('//a[@class="pager-next"]/@href')
             if next_page:
