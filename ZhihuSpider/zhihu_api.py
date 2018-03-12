@@ -224,5 +224,5 @@ class Zhihu_API:
 
 
 if __name__ == '__main__':
-    zhihu = Zhihu_API('13631252855', 'ibcNqAsysu102')
+    zhihu = Zhihu_API('username', 'password')
     zhihu.login()
