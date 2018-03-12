@@ -3,17 +3,27 @@
 
 import requests
 import time
-import shutil
 import datetime
 import codecs
 import re
 import random
+import json
+import base64
+import hashlib
+import hmac
 from PIL import Image
 from bs4 import BeautifulSoup
 
 
 class Zhihu_API:
     index = 'www.zhihu.com'
+    sigup_url = 'https://www.zhihu.com/signup'
+    home_url = 'https://www.zhihu.com'
+    sigin_url = 'https://www.zhihu.com/api/v3/oauth/sign_in'
+
+    client_id = 'c3cef7c66a1843f8b3a9e6a1e3160e20'
+    authorization = 'oauth ' + client_id
+
     default_headers = {
         'Host': 'www.zhihu.com',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:58.0) Gecko/20100101 Firefox/58.0',
@@ -21,7 +31,26 @@ class Zhihu_API:
         'Accept-Language': 'en-US,en;q=0.5',
         'Accept-Encoding': 'gzip',
     }
-    xsrf = None
+
+    headers_sigin = dict(default_headers, **{
+        'authorization': authorization,
+        'Referer': sigup_url,
+        'Origin': home_url,
+    })
+
+    headers_captcha = dict(default_headers, **{
+        'authorization': authorization,
+        'Referer': sigup_url,
+    })
+
+    login_payload = {
+        'client_id': client_id,
+        'grant_type': 'password',
+        'source': 'com.zhihu.web',
+        'lang': 'en',
+        'ref_source': 'other',
+        'utm_source': None,
+    }
 
     def __init__(self, phone, password):
         self.phone = phone
@@ -29,52 +58,66 @@ class Zhihu_API:
         self.session = requests.session()
         self.filename = None
 
-    def get_xsrf(self):
-        headers = self.default_headers.copy()
-        resp = self.session.get('https://' + self.index, headers=headers)
-        soup = BeautifulSoup(resp.content, 'lxml')
-        self.xsrf = soup.select_one("input[name='_xsrf']").get('value')
-        return self.xsrf
+    def get_token(self):
+        resp = self.session.get(self.sigup_url, headers=self.default_headers, allow_redirects=False)
+        return resp.cookies['_xsrf']
 
-    def phone_login(self):
-        url = 'https://www.zhihu.com/login/phone_num'
-        my_url = 'https://www.zhihu.com/people/hao-qi-hai-bu-si-de-mao-24/activities'
-        data = {
-            '_xsrf': self.get_xsrf(),
-            'captcha_type': 'cn',
-            'password': self.password,
-            'phone_num': self.phone,
-            'remember_me': True,
-        }
+    def get_captcha(self):
+        captcha_url = 'https://www.zhihu.com/api/v3/oauth/captcha'
+        query_string_parameters = {'lang': 'en'}
+        resp = self.session.get(captcha_url, data=query_string_parameters, headers=self.headers_captcha)
 
-        headers = self.default_headers.copy()
-        headers['Referer'] = 'https://' + self.index
-        headers['X-Xsrftoken'] = self.xsrf
-        headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'
-        headers['X-Requested-With'] = 'XMLHttpRequest'
+        if json.loads(resp.text)['show_captcha']:
+            resp = self.session.put(captcha_url, data=query_string_parameters,
+                       headers=self.headers_captcha)
+            pattern = re.compile(r'"img_base64":"(.+?)=\n"')
+            img_base64 = pattern.findall(resp.text)[0]
+            img_data = base64.b64decode(img_base64)
+            with open('captcha_zhihu.png', 'wb') as f:
+                f.write(img_data)
 
-        with open('capture.gif', 'wb') as f:
-            resp = self.session.get(
-                'https://www.zhihu.com/captcha.gif?r=%d&type=login' % int(time.time() * 1000),
-                headers=self.default_headers, stream=True)
-            resp.raw.decode_content = True
-            shutil.copyfileobj(resp.raw, f)
+            image = Image.open('captcha_zhihu.png')
+            image.show()
 
-        image = Image.open('capture.gif')
-        image.show()
-        capture = raw_input('Please enter the capture code: ')  #
-
-        data['captcha'] = capture
-        self.session.post(url=url, data=data, headers=headers, allow_redirects=False)
-
-        headers = self.default_headers.copy()
-        resp = self.session.get(my_url, headers=headers, allow_redirects=False)
-        if resp.status_code == 200:
-            return True
+            captcha = raw_input('请输入验证码：')
+            return captcha
         else:
-            print resp.content
-            print resp.status_code
-            return False
+            return None
+
+    def get_signature(self, timestamp):
+        h = hmac.new(b'd1b964811afb40118a12068ff74a12f4', digestmod=hashlib.sha1)
+        grant_type = self.login_payload['grant_type']
+        source = self.login_payload['source']
+        h.update(grant_type + self.client_id + source + timestamp)
+        return h.hexdigest()
+
+    def login(self):
+        xsrf_token = self.get_token()
+        timestamp = str(int(time.time() * 1000))
+        signature = self.get_signature(timestamp)
+        captcha = self.get_captcha()
+        self.login_payload.update({
+            'username': self.phone,
+            'password': self.password,
+            'timestamp': timestamp,
+            'signature': signature,
+            'captcha': captcha,
+        })
+        self.headers_sigin.update({'X-Xsrftoken': xsrf_token})
+        resp = self.session.post(self.sigin_url, data=self.login_payload, headers=self.headers_sigin,
+                    allow_redirects=False)
+        check = self.check_login()
+        if 'error' in resp.text:
+            print resp.text
+        elif check:
+            print u'登陆成功！'
+
+    def check_login(self):
+        resp = self.session.get(self.sigup_url, allow_redirects=True,
+                   headers=self.default_headers)
+        if resp.url == self.home_url:
+            return True
+        return False
 
     def search_question(self, keyword):
         print '-*- searching %s -*-' % keyword
@@ -107,7 +150,7 @@ class Zhihu_API:
                 if question_uri and 'question' in question_uri:
                     question_id = question_uri.split('/')[-1]
                     if not self.get_answers_by_id(question_id):
-                        self.phone_login()
+                        self.login()
 
             # 没有下一页则结束
             if not json_obj['paging']['next']:
@@ -181,9 +224,5 @@ class Zhihu_API:
 
 
 if __name__ == '__main__':
-    zhihu = Zhihu_API('phone_number', 'password')
-    while not zhihu.phone_login():
-        pass
-    keywords = ['python']
-    for keyword in keywords:
-        zhihu.search_question(keyword)
+    zhihu = Zhihu_API('13631252855', 'ibcNqAsysu102')
+    zhihu.login()
