@@ -109,6 +109,7 @@ COMMENT_EXTRA_KEYWORDS = [
     ('creationTime', u'评论日期'),
     ('score', u'评分'),
     ('referenceName', u'商品名称'),
+    ('productColor', u'产品类型'),
 ]
 
 COMMENT_EXTRA_KEYWORDS_DICT = OrderedDict()
@@ -210,7 +211,7 @@ def curl_comments(ids):
 
                     with codecs.open(filename, 'a', 'GBK') as f:
                         for comment in comment_list:
-                            result_list = [unicode(comment[key]).replace('\n', '') for key in
+                            result_list = [unicode(comment[key]).replace('\n', '') if key in comment else "" for key in
                                            COMMENT_EXTRA_KEYWORDS_DICT]
                             f.write(CSV_SEQ.join(result_list) + '\n')
 
