@@ -20,3 +20,8 @@ Mouser网站爬虫
 珍爱网 相亲网站爬虫
 
 标签: `Python`, `scrapy`
+
+## WeiboCommentSpider
+新浪微博 搜索结果的评论爬虫
+
+标签: `Python`, `requests`
